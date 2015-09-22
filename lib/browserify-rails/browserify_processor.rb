@@ -164,14 +164,17 @@ module BrowserifyRails
       output_file = Tempfile.new("output", rails_path(tmp_path))
       command_options << " -o #{output_file.path.inspect}"
 
+      # Use file instead of stdin
+      base_filename = File.basename(file)
+
       # Compose the full command (using browserify or browserifyinc as necessary)
-      command = "#{Shellwords.escape(browserify_command(force_browserifyinc))} #{command_options} -"
+      command = "#{Shellwords.escape(browserify_command(force_browserifyinc))} #{command_options} #{base_filename}"
 
       # The directory the command will be executed from
       base_directory = File.dirname(file)
 
       Logger::log "Browserify: #{command}"
-      stdout, stderr, status = Open3.capture3(env, command, stdin_data: data, chdir: base_directory)
+      stdout, stderr, status = Open3.capture3(env, command, chdir: base_directory)
 
       if !status.success?
         raise BrowserifyRails::BrowserifyError.new("Error while running `#{command}`:\n\n#{stderr}")
